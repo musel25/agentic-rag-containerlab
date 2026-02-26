@@ -1,0 +1,15 @@
+name: telemetry-lab
+topology:
+  nodes:
+    # Our target SR Linux router
+    srl-router:
+      kind: nokia_srlinux
+      image: ghcr.io/nokia/srlinux:latest
+    
+    # Our telemetry collector (using a basic Alpine image for now)
+    collector:
+      kind: linux
+      image: alpine:latest
+
+  links:
+    - endpoints: ["srl-router:e1-1", "collector:eth1"]
