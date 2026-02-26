@@ -1,15 +1,35 @@
 name: telemetry-lab
 topology:
   nodes:
-    # Our target SR Linux router
     srl-router:
       kind: nokia_srlinux
       image: ghcr.io/nokia/srlinux:latest
     
-    # Our telemetry collector (using a basic Alpine image for now)
-    collector:
+    gnmic:
       kind: linux
-      image: alpine:latest
+      image: ghcr.io/openconfig/gnmic:latest
+      binds:
+        - ./gnmic.yaml:/gnmic.yaml:ro
+      cmd: --config /gnmic.yaml subscribe
+      ports:
+        - "9804:9804" # Port for Prometheus to scrape
+    
+    prometheus:
+      kind: linux
+      image: prom/prometheus:latest
+      binds:
+        - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      ports:
+        - "9090:9090"
+        
+    grafana:
+      kind: linux
+      image: grafana/grafana:latest
+      ports:
+        - "3000:3000"
+      binds:
+        - ./grafana-data:/var/lib/grafana
+      user: "472" # Optional but recommended: ensures Grafana can write to your local folder
 
   links:
-    - endpoints: ["srl-router:e1-1", "collector:eth1"]
+    - endpoints: ["srl-router:e1-1", "gnmic:eth1"]
